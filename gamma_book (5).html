@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gamma Strategy Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060d;--bg3:#0c1120;
+  --border:#1a2540;--border2:#243050;
+  --cyan:#00e5ff;--cyan-glow:rgba(0,229,255,0.15);
+  --magenta:#e040fb;--mag-glow:rgba(224,64,251,0.12);
+  --lime:#00c853;--red:#ff3b3b;--yellow:#ffe600;
+  --text:#c8d8f0;--muted:rgba(180,200,230,0.7);
+  --hf:'Orbitron',monospace;--bf:'Exo 2',sans-serif;
+  --sidebar-w:220px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--bf);min-height:100vh;font-size:16px;line-height:1.8;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,0.015) 2px,rgba(0,229,255,0.015) 4px);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(4,6,13,0.97);border-bottom:1px solid var(--border2);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;backdrop-filter:blur(12px)}
+nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent)}
+.nav-logo{font-family:var(--hf);font-size:14px;font-weight:700;letter-spacing:.2em;color:#fff;text-shadow:0 0 20px var(--cyan)}
+.nav-logo span{color:var(--cyan);opacity:.7}
+.nav-right{display:flex;align-items:center;gap:8px}
+.save-ind{font-size:10px;font-family:var(--hf);letter-spacing:.1em;color:transparent;transition:all .3s}
+.save-ind.saving{color:var(--magenta);text-shadow:0 0 8px var(--magenta)}
+.save-ind.saved{color:var(--cyan);text-shadow:0 0 8px var(--cyan)}
+.btn{background:rgba(0,229,255,0.04);border:1px solid var(--border2);color:var(--text);padding:6px 14px;border-radius:4px;font-size:12px;font-family:var(--hf);cursor:pointer;display:flex;align-items:center;gap:8px;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
+.btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px var(--cyan-glow)}
+.btn svg{width:10px;height:10px;fill:currentColor;transition:transform .2s}
+.btn.open svg{transform:rotate(180deg)}
+.btn.accent{border-color:var(--cyan);color:var(--cyan)}
+.dd{position:relative}
+.dd-menu{position:absolute;right:0;top:calc(100% + 8px);background:rgba(8,12,24,0.98);border:1px solid var(--border2);border-radius:6px;min-width:220px;padding:6px;z-index:200;display:none;box-shadow:0 8px 40px rgba(0,0,0,.8)}
+.dd-menu.open{display:block}
+.dd-item{padding:8px 14px;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text);transition:all .15s}
+.dd-item:hover,.dd-item.active{color:var(--cyan);background:var(--cyan-glow)}
+.sidebar{position:fixed;left:0;top:58px;bottom:0;width:var(--sidebar-w);background:rgba(4,6,13,0.97);border-right:1px solid var(--border2);overflow-y:auto;z-index:90;padding:1.5rem 0}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sb-label{font-family:var(--hf);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#2a3a50;padding:.25rem 1.25rem;margin-top:1.25rem;display:block}
+.sb-label:first-child{margin-top:0}
+.sb-item{display:block;padding:.45rem 1.25rem .45rem 1.5rem;font-size:11px;font-family:var(--bf);color:#4a6080;cursor:pointer;transition:all .2s;border-left:2px solid transparent;line-height:1.4;width:100%;text-align:left;background:none;border-top:none;border-right:none;border-bottom:none}
+.sb-item:hover{color:var(--text);border-left-color:var(--border2)}
+.sb-item.active{color:var(--cyan);border-left-color:var(--cyan);background:rgba(0,229,255,0.04)}
+main{margin-left:var(--sidebar-w);padding:6rem 3rem 10rem;max-width:calc(880px + var(--sidebar-w));position:relative;z-index:1}
+.sec{margin-bottom:8rem;scroll-margin-top:74px;padding-top:2rem}
+.tag{font-family:var(--hf);font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);margin-bottom:.6rem;font-weight:500;text-shadow:0 0 10px var(--cyan)}
+.divider{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--border2),var(--cyan),var(--border2),transparent);margin:4rem 0;opacity:.6}
+[contenteditable]{outline:none;cursor:text;border-radius:3px;padding:2px 4px;margin:-2px -4px;transition:all .2s}
+[contenteditable]:hover{background:rgba(0,229,255,0.04)}
+[contenteditable]:focus{background:rgba(0,229,255,0.06);box-shadow:0 0 0 1px rgba(0,229,255,0.3)}
+.e-title{font-family:var(--hf);font-size:clamp(1.8rem,4.5vw,3rem);font-weight:700;line-height:1.2;color:#fff;margin-bottom:.75rem;display:block;animation:glow 4s ease-in-out infinite}
+.e-h2{font-family:var(--hf);font-size:1.4rem;font-weight:500;color:#fff;margin-bottom:.6rem;display:block;letter-spacing:.08em;animation:glow 5s ease-in-out infinite}
+.e-sub{font-size:1.1rem;color:rgba(200,216,240,0.75);line-height:1.8;display:block;max-width:700px;font-weight:300}
+.e-body{color:var(--muted);font-size:1rem;line-height:1.9;display:block;min-height:60px;font-weight:300}
+@keyframes glow{0%,100%{text-shadow:0 0 20px rgba(255,255,255,0.4),0 0 50px rgba(0,229,255,0.2)}50%{text-shadow:0 0 40px rgba(255,255,255,0.8),0 0 80px rgba(0,229,255,0.5)}}
+.hl{color:var(--cyan);font-weight:500;text-shadow:0 0 10px var(--cyan)}
+.hl-lime{color:var(--lime);font-weight:500;text-shadow:0 0 10px var(--lime)}
+.hl-red{color:var(--red);font-weight:500;text-shadow:0 0 10px var(--red)}
+.hl-y{color:var(--yellow);font-weight:500;text-shadow:0 0 10px var(--yellow);text-decoration:none}
+.hl-y:hover{text-shadow:0 0 20px var(--yellow)}
+.hl-blue{color:#4d9fff;font-weight:500;text-shadow:0 0 10px #4d9fff}
+.cat-label{display:block;font-family:var(--hf);font-size:.8rem;letter-spacing:.1em;color:#fff;margin-bottom:.1rem;margin-top:1rem}
+.cat-label:first-child{margin-top:0}
+.slot-wrap{margin:1.5rem 0}
+.slot-label{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed var(--border2);border-radius:8px;padding:3rem 2rem;text-align:center;color:#3a3f52;font-size:12px;font-family:var(--hf);letter-spacing:.1em;cursor:pointer;transition:all .3s;background:rgba(0,229,255,0.02)}
+.slot-label:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 20px var(--cyan-glow),inset 0 0 20px var(--cyan-glow)}
+.slot-label input[type=file]{display:none}
+.slot-label svg{width:24px;height:24px;fill:currentColor;margin-bottom:.75rem}
+.slot-preview{display:none;position:relative;border-radius:8px;overflow:hidden}
+.slot-preview.visible{display:block}
+.slot-preview img,.slot-preview video{width:100%;display:block;border-radius:8px}
+.slot-preview img{cursor:zoom-in}
+.slot-rm{position:absolute;top:8px;right:8px;background:rgba(4,6,13,0.85);border:1px solid var(--red);color:var(--red);font-size:10px;font-family:var(--hf);letter-spacing:.1em;padding:5px 10px;border-radius:4px;cursor:pointer;opacity:.5;transition:opacity .2s;z-index:10}
+.slot-rm:hover{background:var(--red);color:#04060d;opacity:1}
+.url-row{display:none}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;align-items:center;justify-content:center;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 0 60px rgba(0,229,255,0.2)}
+.lightbox-close{position:fixed;top:20px;right:24px;font-size:28px;color:#fff;cursor:pointer;font-family:var(--hf);opacity:.7;transition:opacity .2s;z-index:1000}
+.lightbox-close:hover{opacity:1;color:var(--cyan)}
+.sec-featured{background:linear-gradient(135deg,rgba(0,229,255,0.04),rgba(0,229,255,0.01),rgba(224,64,251,0.03));border:1px solid rgba(0,229,255,0.2);border-radius:12px;padding:2.5rem;position:relative;overflow:hidden}
+.sec-featured::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,255,0.06) 0%,transparent 50%,rgba(224,64,251,0.04) 100%);pointer-events:none}
+.sec-featured::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent)}
+.e-h2-featured{font-family:var(--hf);font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:.6rem;display:block;letter-spacing:.1em;animation:glow-featured 3s ease-in-out infinite}
+@keyframes glow-featured{0%,100%{text-shadow:0 0 20px rgba(0,229,255,0.6),0 0 40px rgba(0,229,255,0.3)}50%{text-shadow:0 0 40px rgba(0,229,255,1),0 0 80px rgba(0,229,255,0.6),0 0 120px rgba(0,229,255,0.3)}}
+.rule-block{background:rgba(0,0,0,0.3);border:1px solid var(--border2);border-radius:8px;padding:1.25rem 1.5rem;margin:.75rem 0}
+.rule-block:hover{border-color:rgba(0,229,255,0.3)}
+.aff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.5rem}
+.aff-card{background:rgba(0,229,255,0.03);border:1px solid var(--border2);border-radius:8px;padding:1.25rem;transition:all .3s}
+.aff-card:hover{border-color:var(--cyan);box-shadow:0 0 20px var(--cyan-glow)}
+.aff-lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#4a6080;margin-bottom:.4rem;font-family:var(--hf)}
+.aff-name{font-family:var(--hf);font-size:13px;font-weight:700;color:#fff;margin-bottom:.75rem;letter-spacing:.08em}
+.aff-card-hero{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.3);border-radius:8px;padding:2rem;transition:all .3s;position:relative;overflow:hidden;animation:pulse-card 3s ease-in-out infinite}
+.aff-card-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,200,83,0.08),rgba(0,229,255,0.08));pointer-events:none}
+.aff-card-hero::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lime),var(--cyan))}
+.aff-card-hero:hover{border-color:var(--cyan);box-shadow:0 0 40px rgba(0,229,255,0.3),0 0 80px rgba(0,229,255,0.15)}
+@keyframes pulse-card{0%,100%{box-shadow:0 0 15px rgba(0,229,255,0.15),0 0 30px rgba(0,200,83,0.08)}50%{box-shadow:0 0 30px rgba(0,229,255,0.3),0 0 60px rgba(0,200,83,0.15)}}
+.aff-card-hero .aff-name{font-size:18px;letter-spacing:.1em;margin-bottom:1rem}
+.aff-card-hero .aff-link{padding:8px 20px;font-size:12px}
+.aff-link{display:inline-block;border:1px solid var(--cyan);color:var(--cyan);font-size:11px;font-family:var(--hf);padding:6px 16px;border-radius:3px;text-decoration:none;letter-spacing:.1em;transition:all .3s}
+.aff-link:hover{background:var(--cyan);color:#04060d}
+.social-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem}
+.soc-btn{background:transparent;border:1px solid var(--border2);border-radius:4px;padding:8px 18px;font-size:11px;font-family:var(--hf);color:var(--text);text-decoration:none;transition:all .3s;letter-spacing:.08em}
+.soc-btn:hover{border-color:var(--magenta);color:var(--magenta);box-shadow:0 0 12px var(--mag-glow)}
+.quote{border-left:2px solid var(--cyan);padding:1rem 1.5rem;background:rgba(0,229,255,0.03);border-radius:0 6px 6px 0;margin:1.5rem 0}
+.quote .e-body{font-style:italic;color:rgba(0,229,255,0.8)}
+.tip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1rem}
+.tip-card{background:rgba(224,64,251,0.03);border:1px solid var(--border2);border-radius:8px;padding:1.25rem;transition:all .3s}
+.tip-card:hover{border-color:var(--magenta);box-shadow:0 0 16px var(--mag-glow)}
+.tip-tag{font-size:9px;font-weight:700;font-family:var(--hf);letter-spacing:.2em;text-transform:uppercase;color:var(--magenta);margin-bottom:.5rem;text-shadow:0 0 8px var(--magenta)}
+/* TRANSLATE OVERLAY */
+.toverlay{display:none;position:fixed;inset:0;background:rgba(4,6,13,0.92);z-index:998;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.toverlay.show{display:flex}
+.tbox{background:rgba(12,17,32,0.98);border:1px solid var(--border2);border-radius:12px;padding:2.5rem 3rem;text-align:center;max-width:380px;width:90%;position:relative;overflow:hidden}
+.tbox::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent)}
+.tbox-title{font-family:var(--hf);font-size:13px;color:#fff;letter-spacing:.15em;margin-bottom:.4rem}
+.tbox-sub{font-size:11px;color:var(--muted);margin-bottom:1.5rem}
+.tbox-bar-wrap{background:var(--border);border-radius:4px;height:4px;overflow:hidden;margin-bottom:.6rem}
+.tbox-bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--magenta));border-radius:4px;transition:width .4s;width:0%}
+.tbox-step{font-size:10px;color:var(--muted);font-family:var(--hf);letter-spacing:.1em}
+/* PRELOAD BANNER */
+.pbanner{display:none;position:fixed;bottom:0;left:var(--sidebar-w);right:0;background:rgba(8,12,24,0.97);border-top:1px solid var(--border2);padding:.6rem 2rem;z-index:95;align-items:center;gap:1rem}
+.pbanner-txt{font-family:var(--hf);font-size:10px;letter-spacing:.1em;color:var(--cyan);white-space:nowrap}
+.pbanner-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:3px;overflow:hidden}
+.pbanner-bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--magenta));border-radius:4px;transition:width .5s;width:0%}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.hint{font-size:10px;color:#1a2540;margin-top:3rem;text-align:center;letter-spacing:.12em;font-family:var(--hf)}
+</style>
+</head>
+<body>
+
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<nav>
+  <div class="nav-logo">GAMMA<span> BOOK</span></div>
+  <div class="nav-right">
+    <span class="save-ind" id="si"></span>
+    <button class="btn accent" onclick="exportHTML()">EXPORT HTML</button>
+  </div>
+</nav>
+
+<aside class="sidebar">
+  <span class="sb-label">Getting started</span>
+  <button class="sb-item active" onclick="goTo('s0')">Introduction</button>
+  <span class="sb-label">Gamma fundamentals</span>
+  <button class="sb-item" onclick="goTo('s1')">Ch 01 — What is Gamma?</button>
+  <button class="sb-item" onclick="goTo('s2')">Ch 02 — How does it work?</button>
+  <button class="sb-item" onclick="goTo('s3')">Ch 03 — Where to find histograms?</button>
+  <button class="sb-item" onclick="goTo('s4')">Ch 04 — Why use Gamma?</button>
+  <button class="sb-item" onclick="goTo('s5')">Ch 05 — Which instruments?</button>
+  <button class="sb-item" onclick="goTo('s6')">Ch 06 — Swing or Intraday?</button>
+  <span class="sb-label">Strategy</span>
+  <button class="sb-item" onclick="goTo('s7')">⚡ Ch 07 — Fundamentals</button>
+  <button class="sb-item" onclick="goTo('s8')">Ch 08 — Basic examples</button>
+  <button class="sb-item" onclick="goTo('s9')">Ch 09 — My strategy</button>
+  <button class="sb-item" onclick="goTo('s10')">Ch 10 — Volume Profile Examples</button>
+  <button class="sb-item" onclick="goTo('s11')">Ch 11 — Applying Gamma POIs</button>
+  <button class="sb-item" onclick="goTo('s12')">Ch 12 — SFP Examples</button>
+  <span class="sb-label">Extras</span>
+  <button class="sb-item" onclick="goTo('s13')">Quotes · Bonus · Tips</button>
+  <button class="sb-item" onclick="goTo('s14')">Social + Referral</button>
+</aside>
+
+<main>
+
+  <section class="sec" id="s0">
+    <div class="tag">Introduction</div>
+    <span class="e-title" contenteditable="true" data-key="t0">Gamma, the real edge. by <a href="https://menthorq.com/?aff=uuskiy" target="_blank" style="background:linear-gradient(90deg,#00c853,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:pulse-card 3s ease-in-out infinite;display:inline-block;text-decoration:none">MenthorQ</a>.</span>
+    <span class="e-sub" contenteditable="true" data-key="t1">Gamma let's you read the institutional mechanical behaviour and trade with a professional <span class="hl">edge</span>.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>CLICK TO ADD IMAGE OR VIDEO</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div style="margin:2rem 0">
+      <span style="display:block;font-family:var(--hf);font-size:clamp(1.4rem,3.5vw,2.2rem);font-weight:700;color:#fff;line-height:1.3;text-shadow:0 0 30px rgba(0,229,255,0.4),0 0 60px rgba(0,229,255,0.2)">Options are <span class="hl">86%</span> of the traded volume in the world!</span>
+    </div>
+    <div style="margin-top:2rem">
+      <span style="display:block;font-size:1.15rem;color:#fff;font-weight:500;text-shadow:0 0 20px rgba(0,229,255,0.4);margin-bottom:1rem">Why trading random patterns in random places?<br>Use <span class="hl">institutional POIs</span> instead.</span>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem">
+        <div style="display:flex;align-items:center;gap:.75rem"><span style="color:var(--cyan)">▸</span><span style="color:var(--text)">High probability trades</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem"><span style="color:var(--cyan)">▸</span><span style="color:var(--text)">Asymmetrical Risk/Reward</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem"><span style="color:var(--cyan)">▸</span><span style="color:var(--text)">Mechanical</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem"><span style="color:var(--cyan)">▸</span><span style="color:var(--text)">Repeatable over time</span></div>
+        <div style="display:flex;align-items:center;gap:.75rem"><span style="color:var(--cyan)">▸</span><span style="color:var(--text)">Fractal (every timeframe)</span></div>
+      </div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s1">
+    <div class="tag">Chapter 01</div>
+    <span class="e-h2" contenteditable="true" data-key="t2">What is Gamma?</span>
+    <span class="e-body" contenteditable="true" data-key="t3">Gamma is the "<span class="hl">accelerator</span>." It measures how fast an option's Delta changes as the market moves. High Gamma means the price of the option will <span class="hl">explode</span> or <span class="hl">collapse</span> very quickly.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s2">
+    <div class="tag">Chapter 02</div>
+    <span class="e-h2" contenteditable="true" data-key="t4">How does it work?</span>
+    <span class="e-body" contenteditable="true" data-key="t5">It's all about Dealer Hedging. To remain neutral, Market Makers must buy or sell Futures against the options they've sold to you:<br><br><span class="hl-lime">Positive</span> Gamma (&gt;0): Dealers sell rallies and buy dips. This creates stability and slow-moving ranges.<br><span class="hl-red">Negative</span> Gamma (&lt;0): Dealers must buy rallies and sell dips. This creates volatility and violent, fast price action.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s3">
+    <div class="tag">Chapter 03</div>
+    <span class="e-h2" contenteditable="true" data-key="t6">Where to find Gamma histograms?</span>
+    <span class="e-body" contenteditable="true" data-key="t7"><a href="https://menthorq.com/?aff=uuskiy" target="_blank" class="hl-y">MenthorQ</a> is the most user-friendly software that gives you access to precise Gamma Histograms, the only one that integrates with <a href="https://www.tradingview.com/?aff_id=166201" target="_blank" class="hl-y">TradingView</a>.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+    <span class="e-body" contenteditable="true" data-key="t7b" style="margin-top:.5rem">How the integration on <span class="hl-y">TradingView</span> looks like, easy and clean institutional levels on your chart.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s4">
+    <div class="tag">Chapter 04</div>
+    <span class="e-h2" contenteditable="true" data-key="t8">Why use Gamma?</span>
+    <span class="e-body" contenteditable="true" data-key="t9">When the price hits "Gamma Walls" (Call or Put Walls), Dealers are <span class="hl">forced</span> to hedge aggressively. This creates predictable <span class="hl">turning points</span> or <span class="hl">acceleration zones</span> that you can exploit with a proper strategy.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>CLICK TO ADD VIDEO OR IMAGE</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s5">
+    <div class="tag">Chapter 05</div>
+    <span class="e-h2" contenteditable="true" data-key="t-inst-title">Which instruments can I use MenthorQ on?</span>
+    <div class="e-body" contenteditable="true" data-key="t-inst-body">
+      <span class="cat-label">Indices</span>Nasdaq, S&amp;P500, Dow Jones...
+      <span class="cat-label">Commodities</span>Gold, Silver, Crude Oil...
+      <span class="cat-label">Forex</span>EUR/USD, GBP/USD, AUD/USD...
+      <span class="cat-label">Crypto</span>BTC, ETH, SOL...
+      <span class="cat-label">Stocks</span>AAPL, TSLA, NVDA...
+      <span class="cat-label">Options</span>QQQ, SPY, GLD...
+    </div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s6">
+    <div class="tag">Chapter 06</div>
+    <span class="e-h2" contenteditable="true" data-key="t-si-title">Swing or Intraday? Both!</span>
+    <div style="margin-top:1.5rem">
+      <span class="e-body" style="min-height:unset" contenteditable="true" data-key="t-si-swing">For <span class="hl">Swing</span> trading, use "Expiration with Highest GEX" in <a href="https://menthorq.com/?aff=uuskiy" target="_blank" class="hl-y">MenthorQ</a></span>
+    </div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE / DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div style="margin-top:.5rem">
+      <span class="e-body" style="min-height:unset" contenteditable="true" data-key="t-si-intraday">For <span class="hl">Intraday</span> trading, use "First Expiration" a.k.a <span class="hl">0dte</span></span>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec sec-featured" id="s7">
+    <div class="tag" style="color:var(--cyan);text-shadow:0 0 15px var(--cyan)">Chapter 07 — Core Rules</div>
+    <span class="e-h2-featured" contenteditable="true" data-key="t-fund-title">FUNDAMENTAL MARKET BEHAVIOUR WITH GAMMA AS <span class="hl">CONTEXT</span></span>
+    <div class="rule-block">
+      <div class="tag" style="margin-bottom:.5rem">Premise</div>
+      <span class="e-body" contenteditable="true" data-key="t-fund-premise"><span class="hl-lime">Positive</span> Gamma (&gt;0): Dealers sell rallies and buy dips. This creates stability and slow-moving ranges.<br><br><span class="hl-red">Negative</span> Gamma (&lt;0): Dealers must buy rallies and sell dips. This creates volatility and violent, fast price action.</span>
+    </div>
+    <div class="rule-block">
+      <div class="tag" style="margin-bottom:.5rem">Definitions</div>
+      <span class="e-body" contenteditable="true" data-key="t-fund-defs">
+        <strong style="color:#fff">Gamma Wall</strong> = The longest bar in the histogram → <span class="hl">Magnet</span>. The strike with the highest absolute Gamma concentration. Price tends to gravitate toward it.<br><br>
+        <strong style="color:#fff">Call Wall</strong> = The strike with the highest net <span class="hl-lime">positive</span> Gamma → <span class="hl">Resistance</span>. Dealers short calls sell the underlying as price approaches, capping upside.<br><br>
+        <strong style="color:#fff">Put Wall</strong> = The strike with the highest net <span class="hl-red">negative</span> Gamma → <span class="hl">Support</span>. Dealers short puts buy the underlying as price approaches, cushioning downside.<br><br>
+        <strong style="color:#fff">HVL (High Volatility Level)</strong> = Inflection point of the gamma exposure curve → Regime boundary.<br>
+        Price above HVL → Mean Revert Bias<br>
+        Price below HVL → Breakout Bias
+      </span>
+    </div>
+    <div class="rule-block" style="border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.05)">
+      <div class="tag" style="margin-bottom:.5rem">Keep this in mind, it's very simple...</div>
+      <span class="e-body" contenteditable="true" data-key="t-fund-summary">
+        <span class="hl-lime">Positive</span> Gamma Regime = <span class="hl">Mean Reverting</span><br>
+        <span class="hl-red">Negative</span> Gamma Regime = <span class="hl">Breakout</span>
+      </span>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s8">
+    <div class="tag">Chapter 08</div>
+    <span class="e-h2" contenteditable="true" data-key="t10">Basic examples</span>
+    <span class="e-body" contenteditable="true" data-key="t11">Walk through simple, accessible examples. Easy to follow for readers who are new to this concept.</span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD EXAMPLE CHART</label>
+      <div class="slot-preview"></div>
+    </div>
+    <span class="e-body" contenteditable="true" data-key="t11b">In this example of AUD/USD we can see that the Gamma Histogram suggests there is high <span class="hl-lime">positive</span> Gamma at <strong style="color:#fff">0.720</strong> making it a <span class="hl">Call Wall</span>, positive GEX at <strong style="color:#fff">0.715</strong> and <strong style="color:#fff">0.71</strong> with overall <span class="hl-lime">positive</span> Gamma which means we are in a <span class="hl">Mean-Reverting</span> context. Price reacts very cleanly to the levels.</span>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s9">
+    <div class="tag">Chapter 09</div>
+    <span class="e-h2" contenteditable="true" data-key="t12">My strategy (theory)</span>
+    <span class="e-body" contenteditable="true" data-key="t13">
+      <strong style="color:#fff">POI = Gamma level</strong><br><br>
+      Without a <span class="hl-blue">POI</span> there is <span class="hl-red">NO</span> trade.<br><br>
+      Gamma Histograms are the <span class="hl">warmap</span>, look at them for <span class="hl">context</span>.<br><br>
+      <span class="hl">Entries</span>, <span class="hl-red">Stoploss</span> and <span class="hl-lime">Take Profits</span> are purely <span class="hl">mechanical</span>, no fomo, no interpretation.<br><br>
+      Technical is the essence of the model, Gamma levels are the context.<br><br>
+      Technical executions come from:<br>
+      <span style="display:block;margin-top:.5rem;margin-left:1rem">▸ Trend-based Fibonacci</span>
+      <span style="display:block;margin-left:1rem">▸ Swing Failure Pattern</span>
+      <span style="display:block;margin-left:1rem">▸ Break and Retest Pattern</span>
+      <span style="display:block;margin-left:1rem">▸ A combination of <span class="hl-y">Auction Market Theory, Wyckoff, Elliot, Dow theories</span> but simplified.</span>
+    </span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD DIAGRAM / FRAMEWORK</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div class="rule-block" style="margin-top:2rem;border-color:rgba(0,229,255,0.25)">
+      <span class="e-body" contenteditable="true" data-key="t13c">
+        In a bullish example <em style="color:#7a8096;font-size:.85rem">(same for bearish but mirrored)</em> a <strong style="color:#fff">Swing Failure Pattern</strong> is valid if:<br><br>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ It happens at a <span class="hl-blue">POI</span></span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ The current High <span class="hl-lime">[green line]</span> <strong style="color:#fff">fails</strong> to take the previous Low</span>
+        <span style="display:block;margin-left:1rem;margin-bottom:1.5rem">▸ Price instead turns around from the failed new Low <span class="hl">[cyan line]</span> and takes the High <span class="hl-lime">[green line]</span></span>
+        The mechanical way of entry / stoploss / take profit:<br><br>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Draw a <strong style="color:#fff">Trend-Based Fibonacci</strong> from A → B → C</span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ D must touch <span class="hl">100%</span> for better success rate</span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Draw a new <strong style="color:#fff">Fibonacci Retracement</strong> from C to D</span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Enter at <strong style="color:#fff">50%</strong> or <strong style="color:#fff">0.618</strong> at E</span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Stoploss below <span class="hl-red">C</span></span>
+        <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ TP 1 at <span class="hl-lime">1.618</span> + <strong style="color:#fff">Break-Even</strong></span>
+        <span style="display:block;margin-left:1rem">▸ TP 2 at <span class="hl-lime">2.618</span></span>
+      </span>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s10">
+    <div class="tag">Chapter 10</div>
+    <span class="e-h2" contenteditable="true" data-key="t14">Volume Profile Examples</span>
+    <span class="e-body" contenteditable="true" data-key="t15">
+      Based on a simplified version of <strong style="color:#fff">Elliott Wave:</strong><br>
+      <span style="display:block;margin-left:1rem;margin-top:.4rem">▸ Point 5 often reaches <strong style="color:#fff">2.618</strong> before reverting</span>
+      <span style="display:block;margin-left:1rem">▸ Zone 3-4 gets visited <strong style="color:#fff">80%</strong> of the time</span>
+      <span style="display:block;margin-left:1rem;margin-bottom:1rem">▸ Zone 2 gets visited only <strong style="color:#fff">15-20%</strong> of the time</span>
+      Based on a simplified version of <strong style="color:#fff">Auction Market Theory:</strong><br>
+      <span style="display:block;margin-left:1rem;margin-top:.4rem;margin-bottom:1rem">▸ The best statistical point to buy/sell is at the VAH/VAL</span>
+      <strong class="hl" style="font-size:1rem;letter-spacing:.1em">KEY RULES:</strong><br><br>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ 3-4 Zone must <span class="hl-red">not</span> enter inside 1-2 Zone</span>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ 3-4 Zone should align with VAL/VAH</span>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ <strong style="color:#fff">Fixed Volume Profile</strong> must be drawn from O, with "extend" option enabled</span>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Entry inside the <strong style="color:#fff">3-4 Zone</strong></span>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ Stoploss below <strong style="color:#fff">3-4 Zone</strong></span>
+      <span style="display:block;margin-left:1rem;margin-bottom:.4rem">▸ TP 1 at <strong style="color:#fff">POC</strong></span>
+      <span style="display:block;margin-left:1rem;margin-bottom:1rem">▸ TP 2 at <strong style="color:#fff">VAH/VAL</strong></span>
+      <em style="color:#4a6080;font-size:.85rem">*Statistics based on Jeffrey Kennedy's extended research based on 2000+ samples</em>
+    </span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD ADVANCED DIAGRAM</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div class="rule-block" style="margin-top:2rem;border-color:rgba(224,64,251,0.3);background:linear-gradient(135deg,rgba(224,64,251,0.05),rgba(0,229,255,0.03));position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--magenta),var(--cyan),transparent)"></div>
+      <strong style="color:#fff;font-family:var(--hf);font-size:.85rem;letter-spacing:.1em;display:block;margin-bottom:1rem">Logical assumptions:</strong>
+      <span class="e-body" contenteditable="true" data-key="t15b">
+        <strong class="hl">Options flow are the core, without it you are trading blindly.</strong><br><br>
+        This roadmap let's you understand and capitalize on the market with a perspective of how the true mechanics of the market work.<br><br>
+        Where the institutions are forced to hedge themselves, the psychology of the market tells you there is exhaustion, the logical point of entering trades based on multiple proven models combined and simplified.<br><br>
+        This is a whole view of market behaviour, I gave you general rules.<br><br>
+        <strong style="color:#fff;font-size:1.1rem">BUT...</strong><br><br>
+        This view is modifiable, you can set different TPs, you can add to trades, you can take profit earlier. All depends on you!
+      </span>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s11">
+    <div class="tag">Chapter 11</div>
+    <span class="e-h2" contenteditable="true" data-key="t16">Applying Gamma <span class="hl-blue">POIs</span> to actual setups</span>
+    <span class="e-body" contenteditable="true" data-key="t17">Bridge theory and practice. This is how the advanced strategy is applied in real conditions, a walk through the thought process from setup to execution.<br><br>In these 2 examples we are gonna focus on the more advanced part of the strategy, let's include a very clean setup and a messy one:</span>
+    <div style="margin-top:1.5rem">
+      <strong style="color:#fff;font-size:1rem">1 — 3-4 make the Zone</strong><br>
+      <span style="display:block;margin-left:1rem;margin-top:.4rem;color:var(--muted)">▸ Zone is below VAL</span>
+      <span style="display:block;margin-left:1rem;color:var(--muted)">▸ Entry at the edge, stop loss below, target VAH</span>
+    </div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD CHART — EXAMPLE 1</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div style="margin-top:1.5rem">
+      <strong style="color:#fff;font-size:1rem">2 — 3-4 do <span class="hl-red">NOT</span> make the zone</strong>, why? the VAH is above it — <span class="hl">ALWAYS</span> prioritize trading <strong style="color:#fff">below/above</strong> <strong style="color:#fff">VAL/VAH</strong><br>
+      <span style="display:block;margin-left:1rem;margin-top:.4rem;color:var(--muted)">▸ Zone is above VAH and 3-4 Zone</span>
+      <span style="display:block;margin-left:1rem;color:var(--muted)">▸ Entry at VAH, stoploss above, target VAL</span>
+      <span style="display:block;margin-left:1rem;margin-top:.5rem"><em style="color:#4a6080">*Notice the <strong style="color:#c8d8f0">Swing Failure Pattern</strong> entry above near the 2</em></span>
+    </div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD CHART — EXAMPLE 2</label>
+      <div class="slot-preview"></div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s12">
+    <div class="tag">Chapter 12</div>
+    <span class="e-h2" contenteditable="true" data-key="t18">Swing Failure Pattern examples</span>
+    <span class="e-body" contenteditable="true" data-key="t19">A clean visual gallery of real trade examples. Let the charts speak. SFP are the easiest setups.</span>
+    <span class="e-body" contenteditable="true" data-key="t19b" style="margin-top:1rem">Usually there are no messy SFP setups, it's hard to find messy examples!</span>
+    <span class="e-body" contenteditable="true" data-key="t19c" style="margin-top:1rem">This is a setup on <strong style="color:#fff">Forex</strong> with a very clean setup and TP based on <span class="hl">Gamma Zones</span></span>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD CHART 1</label>
+      <div class="slot-preview"></div>
+    </div>
+    <span class="e-body" contenteditable="true" data-key="t19d" style="margin-top:.5rem">This is a setup on <strong style="color:#fff">Gold</strong> with a very clean setup but different TP logic, here we used <span class="hl">Trend-Based Fibonacci</span></span>
+    <div class="slot-wrap" style="margin-top:.75rem">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD CHART 2</label>
+      <div class="slot-preview"></div>
+    </div>
+    <span class="e-body" contenteditable="true" data-key="t19e" style="margin-top:.5rem">These are 2 different way of taking profits, you can choose what you prefer and as you can see every <strong style="color:#fff">market is tradable</strong> if <span class="hl">Gamma</span> is available!</span>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s13">
+    <div class="tag">Chapter 13</div>
+    <span class="e-h2" contenteditable="true" data-key="t20">Quotes · Bonus · Tips</span>
+    <div class="quote"><span class="e-body" contenteditable="true" data-key="t21">"Listen to what the market is saying about others, not what others are saying about the market." <em>Cit. R. Wyckoff</em></span></div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div class="quote"><span class="e-body" contenteditable="true" data-key="t22">"If by chance I have omitted anything more or less proper or necessary, I beg forgiveness, since there is no one who is without fault and circumspect in all matters." <em>Cit. L. Fibonacci</em></span></div>
+    <div class="slot-wrap">
+      <label class="slot-label"><input type="file" accept="image/*,video/*"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zM8 17l3-4 2.5 3L17 11l4 6H3z"/></svg>ADD IMAGE</label>
+      <div class="slot-preview"></div>
+    </div>
+    <div style="margin-top:2rem">
+      <div class="tag" style="margin-bottom:.75rem">Bonus &amp; Tips</div>
+      <div class="tip-grid">
+        <div class="tip-card"><div class="tip-tag">BONUS</div><span class="e-body" contenteditable="true" data-key="t23">More material soon...</span></div>
+        <div class="tip-card"><div class="tip-tag">TIP 01</div><span class="e-body" contenteditable="true" data-key="t24">Backtest</span></div>
+        <div class="tip-card"><div class="tip-tag">TIP 02</div><span class="e-body" contenteditable="true" data-key="t25">Journal</span></div>
+      </div>
+    </div>
+  </section>
+  <hr class="divider">
+
+  <section class="sec" id="s14">
+    <div class="tag">Social + Referral</div>
+    <span class="e-h2" contenteditable="true" data-key="t26">Tools &amp; Resources</span>
+    <span class="e-body" contenteditable="true" data-key="t27">These are the tools I personally use and recommend. Using my affiliate links supports this work at no extra cost to you.</span>
+    <div class="aff-grid" style="margin-top:2rem">
+      <div class="aff-card-hero"><div class="aff-lbl">Tool</div><div class="aff-name"><span style="background:linear-gradient(90deg,#00c853,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">MenthorQ</span></div><a class="aff-link" href="https://menthorq.com/?aff=uuskiy" target="_blank">GET ACCESS →</a></div>
+      <div class="aff-card"><div class="aff-lbl">Tool</div><div class="aff-name"><span style="background:linear-gradient(90deg,#00e5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">TradingView</span></div><a class="aff-link" href="https://www.tradingview.com/?aff_id=166201" target="_blank">GET ACCESS →</a></div>
+      <div class="aff-card"><div class="aff-lbl">Tool</div><div class="aff-name"><span style="background:linear-gradient(90deg,#a855f7,#ff3b3b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">MenthorQ connection to TradingView Tutorial</span></div><a class="aff-link" href="https://www.youtube.com/watch?v=O7Nw-LZqmxY&pp=ygUXaG93IHRvIGNvbm5lY3QgbWVudGhvcnE%3D" target="_blank">GET ACCESS →</a></div>
+      <div class="aff-card"><div class="aff-lbl">Tool</div><div class="aff-name"><span style="background:linear-gradient(90deg,#ff3b3b,#ffe600);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Coming soon...</span></div><a class="aff-link" href="#">GET ACCESS →</a></div>
+    </div>
+    <div style="margin-top:3rem">
+      <div class="tag" style="margin-bottom:.75rem">Follow me</div>
+      <div class="social-row">
+        <a class="soc-btn" href="https://x.com/uuskiy" target="_blank">TWITTER / X</a>
+        <a class="soc-btn" href="#">YOUTUBE</a>
+        <a class="soc-btn" href="#">TELEGRAM</a>
+        <a class="soc-btn" href="https://www.instagram.com/fabiosabia_/?hl=it" target="_blank">INSTAGRAM</a>
+        <a class="soc-btn" href="https://discord.com/channels/831525803187372054/1402706730978246677" target="_blank">DISCORD</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="hint">CLICK ANY TEXT TO EDIT · CHANGES SAVED AUTOMATICALLY</p>
+</main>
+
+<script>
+const SK = 'gamma_v4';
+let timer = null;
+const si = document.getElementById('si');
+
+// Pre-loaded translations (replaced on export)
+const PRELOADED = {}; // PRELOADED_MARKER
+
+const origContent = {};
+const tCache = Object.assign({ EN: null }, PRELOADED);
+let isTranslating = false;
+let isPreloading = false;
+let currentLang = 'EN';
+
+const LANG_MAP = {EN:'English',IT:'Italiano',PL:'Polish',ES:'Spanish',DE:'German',AR:'Arabic',ZH:'Mandarin Chinese',CS:'Czech',FR:'French',TR:'Turkish',RU:'Russian',PT:'Portuguese',EL:'Greek',SR:'Serbian',BG:'Bulgarian',SQ:'Albanian',HU:'Hungarian',HE:'Hebrew'};
+const PRELOAD_LANGS = [{code:'IT',name:'Italiano'},{code:'ES',name:'Spanish'},{code:'FR',name:'French'},{code:'DE',name:'German'},{code:'RU',name:'Russian'}];
+const KEEP_EN = 'Gamma, GEX, Delta, HVL, VAH, VAL, POC, SFP, Fibonacci, TradingView, MenthorQ, POI, 0dte, Elliott Wave, Wyckoff, Auction Market Theory, Dow, Call Wall, Put Wall, Gamma Wall, Break-Even, Swing Failure Pattern, Trend-Based Fibonacci, Breakout, Mean Reverting';
+
+async function save() {
+  si.textContent = 'SAVING...'; si.className = 'save-ind saving';
+  const d = {};
+  document.querySelectorAll('[data-key]').forEach(el => { d[el.dataset.key] = el.innerHTML; });
+  try {
+    await window.storage.set(SK, JSON.stringify(d));
+    si.textContent = 'SAVED'; si.className = 'save-ind saved';
+    setTimeout(() => { si.textContent = ''; si.className = 'save-ind'; }, 2000);
+  } catch(e) { si.textContent = 'ERROR'; si.className = 'save-ind'; }
+}
+
+async function load() {
+  try {
+    const r = await window.storage.get(SK);
+    if (r && r.value) {
+      const d = JSON.parse(r.value);
+      document.querySelectorAll('[data-key]').forEach(el => {
+        if (d[el.dataset.key] !== undefined) el.innerHTML = d[el.dataset.key];
+      });
+    }
+  } catch(e) {}
+}
+
+document.querySelectorAll('[contenteditable]').forEach(el => {
+  el.addEventListener('input', () => {
+    clearTimeout(timer);
+    si.textContent = 'SAVING...'; si.className = 'save-ind saving';
+    timer = setTimeout(save, 800);
+  });
+});
+
+function saveOrig() {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    origContent[el.dataset.key] = el.innerHTML;
+  });
+}
+
+function applyTrans(data) {
+  document.querySelectorAll('[data-key]').forEach(el => {
+    if (data[el.dataset.key] !== undefined) el.innerHTML = data[el.dataset.key];
+  });
+}
+
+// TRANSLATE OVERLAY
+function showTOverlay(lang) {
+  document.getElementById('toverlay-title').textContent = 'TRANSLATING TO ' + lang.toUpperCase() + '...';
+  document.getElementById('toverlay-bar').style.width = '0%';
+  document.getElementById('toverlay-step').textContent = 'PREPARING...';
+  document.getElementById('toverlay').classList.add('show');
+}
+function updateTOverlay(i, total) {
+  document.getElementById('toverlay-bar').style.width = Math.round((i/total)*100)+'%';
+  document.getElementById('toverlay-step').textContent = 'BATCH '+i+' OF '+total;
+}
+function hideTOverlay() {
+  document.getElementById('toverlay-bar').style.width = '100%';
+  document.getElementById('toverlay-step').textContent = 'DONE ✓';
+  setTimeout(() => document.getElementById('toverlay').classList.remove('show'), 600);
+}
+
+async function translateBatch(keys, langName) {
+  const batch = {};
+  keys.forEach(k => { if (origContent[k]?.trim().length > 3) batch[k] = origContent[k]; });
+  if (!Object.keys(batch).length) return {};
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{role:'user', content:`Translate to ${langName}. RULES:
+- Preserve ALL HTML tags exactly as-is
+- Keep in English: ${KEEP_EN}
+- Return ONLY a valid JSON object
+- Escape ALL special characters inside strings: double quotes must be \\" , backslashes must be \\\\
+- Do NOT use markdown code blocks
+
+${JSON.stringify(batch)}`}]
+    })
+  });
+  const data = await resp.json();
+  let txt = data.content[0].text.trim();
+  // strip markdown fences if present
+  txt = txt.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'');
+  // find first { and last }
+  const start = txt.indexOf('{');
+  const end = txt.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON object found');
+  txt = txt.slice(start, end + 1);
+  try {
+    return JSON.parse(txt);
+  } catch(e) {
+    // try to fix common issues: unescaped quotes inside values
+    const fixed = txt.replace(/:(\s*)"((?:[^"\\]|\\.)*)"/g, (match, space, val) => {
+      const escaped = val.replace(/(?<!\\)"/g, '\\"');
+      return `:${space}"${escaped}"`;
+    });
+    return JSON.parse(fixed);
+  }
+}
+
+async function translatePage(langCode, langName, silent=false) {
+  if (langCode === 'EN') { applyTrans(origContent); return; }
+  if (tCache[langCode]) { applyTrans(tCache[langCode]); return; }
+
+  // block only concurrent non-silent calls
+  if (!silent && isTranslating) return;
+  if (silent && isPreloading) return;
+
+  if (silent) isPreloading = true;
+  else isTranslating = true;
+
+  if (!silent) showTOverlay(langName);
+  try {
+    const keys = Object.keys(origContent);
+    const size = 10;
+    const batches = [];
+    for (let i = 0; i < keys.length; i += size) batches.push(keys.slice(i, i+size));
+    const translated = {};
+    for (let i = 0; i < batches.length; i++) {
+      if (!silent) updateTOverlay(i+1, batches.length);
+      const r = await translateBatch(batches[i], langName);
+      Object.assign(translated, r);
+    }
+    tCache[langCode] = translated;
+    if (currentLang === langCode) applyTrans(translated);
+  } catch(e) {
+    console.error('Translation error:', e);
+    if (!silent) {
+      document.getElementById('toverlay-step').textContent = 'ERROR — API NOT AVAILABLE ON THIS DEVICE';
+      setTimeout(() => document.getElementById('toverlay').classList.remove('show'), 3000);
+    }
+  } finally {
+    if (silent) isPreloading = false;
+    else { isTranslating = false; if (!document.getElementById('toverlay').classList.contains('show')) {} else hideTOverlay(); }
+  }
+}
+
+async function preloadLangs() {
+  const toLoad = PRELOAD_LANGS.filter(l => !tCache[l.code]);
+  if (!toLoad.length) return;
+  const banner = document.getElementById('pbanner');
+  const bar = document.getElementById('pbanner-bar');
+  const txt = document.getElementById('pbanner-txt');
+  banner.style.display = 'flex';
+  for (let i = 0; i < toLoad.length; i++) {
+    const {code, name} = toLoad[i];
+    txt.textContent = `PRE-LOADING ${name.toUpperCase()}... (${i+1}/${toLoad.length})`;
+    bar.style.width = Math.round((i/toLoad.length)*100)+'%';
+    try { await translatePage(code, name, true); } catch(e) { console.warn('Preload failed for', code, e); }
+  }
+  bar.style.width = '100%';
+  const ready = PRELOAD_LANGS.filter(l => tCache[l.code]).map(l => l.code).join(' · ');
+  txt.textContent = ready ? `✓ ${ready} READY — EXPORT HTML TO SAVE` : '⚠ PRELOAD FAILED — API NOT AVAILABLE';
+  setTimeout(() => { banner.style.display = 'none'; }, 4000);
+}
+
+load().then(() => { saveOrig(); preloadLangs(); });
+
+// SCROLL SPY
+const sections = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14'];
+window.addEventListener('scroll', () => {
+  let cur = 's0';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 100) cur = id;
+  });
+  document.querySelectorAll('.sb-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes("'"+cur+"'"));
+  });
+}, {passive:true});
+
+// LIGHTBOX
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// REMOVE SLOT
+function removeSlotMedia(btn) {
+  const preview = btn.closest('.slot-preview');
+  const wrap = btn.closest('.slot-wrap');
+  preview.innerHTML = '';
+  preview.classList.remove('visible');
+  const label = wrap.querySelector('.slot-label');
+  const fileInp = wrap.querySelector('input[type=file]');
+  if (label) label.style.display = '';
+  if (fileInp) fileInp.value = '';
+}
+
+// SHOW MEDIA
+function showMedia(wrap, src, isVideo) {
+  const label = wrap.querySelector('.slot-label');
+  const preview = wrap.querySelector('.slot-preview');
+  preview.innerHTML = '';
+  let el = document.createElement(isVideo ? 'video' : 'img');
+  if (isVideo) { el.setAttribute('autoplay',''); el.setAttribute('loop',''); el.setAttribute('muted',''); el.setAttribute('playsinline',''); }
+  else { el.setAttribute('onclick', `openLightbox('${src.replace(/'/g,"\\'")}')`) ; }
+  el.src = src;
+  el.style.cssText = 'width:100%;display:block;border-radius:8px'+(isVideo?'':';cursor:zoom-in');
+  const rm = document.createElement('button');
+  rm.className = 'slot-rm'; rm.textContent = '✕ REMOVE';
+  rm.setAttribute('onclick','removeSlotMedia(this)');
+  preview.appendChild(el); preview.appendChild(rm);
+  preview.classList.add('visible');
+  label.style.display = 'none';
+}
+
+// SLOTS
+document.querySelectorAll('.slot-wrap').forEach(wrap => {
+  const fileInp = wrap.querySelector('input[type=file]');
+  fileInp.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => showMedia(wrap, ev.target.result, file.type.startsWith('video/'));
+    reader.readAsDataURL(file);
+  });
+});
+
+// DROPDOWN
+function toggleDD(id) {
+  const menu = document.getElementById('menu-'+id);
+  const btn = document.getElementById('dd-'+id).querySelector('.btn');
+  const open = menu.classList.contains('open');
+  document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('open'));
+  if (!open) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dd')) {
+    document.querySelectorAll('.dd-menu').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('open'));
+  }
+});
+
+function setLang(code) {
+  currentLang = code;
+  document.getElementById('lang-lbl').textContent = code;
+  document.querySelectorAll('#menu-lang .dd-item').forEach(i => i.classList.remove('active'));
+  event.target.classList.add('active');
+  toggleDD('lang');
+  translatePage(code, LANG_MAP[code] || code);
+}
+
+function goTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// EXPORT — bakes preloaded translations into the file
+function exportHTML() {
+  let html = document.documentElement.outerHTML;
+  const cached = {};
+  Object.keys(tCache).forEach(k => { if (tCache[k]) cached[k] = tCache[k]; });
+  html = html.replace('{}; // PRELOADED_MARKER', JSON.stringify(cached)+'; // PRELOADED_MARKER');
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gamma-book.html';
+  a.click();
+}
+</script>
+</body>
+</html>
